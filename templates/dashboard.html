@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kunoichi Radar</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --purple: #bc8cff;
+      --red: #f85149;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
+
+    header h1 span { color: var(--muted); font-weight: 400; font-size: 0.9rem; }
+
+    .last-fetched { color: var(--muted); font-size: 0.8rem; }
+
+    #refresh-btn {
+      background: var(--accent);
+      color: #0d1117;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    #refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .filters {
+      padding: 14px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .filter-group { display: flex; align-items: center; gap: 8px; }
+    .filter-group label { color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
+
+    input[type="range"] { accent-color: var(--accent); width: 140px; }
+    input[type="date"] {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      padding: 4px 8px;
+      font-size: 0.8rem;
+    }
+
+    #stars-value {
+      color: var(--yellow);
+      font-weight: 600;
+      min-width: 40px;
+    }
+
+    .apply-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .apply-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 12px 24px 0;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    .tab {
+      padding: 8px 16px;
+      cursor: pointer;
+      border-radius: 6px 6px 0 0;
+      border: 1px solid transparent;
+      border-bottom: none;
+      color: var(--muted);
+      font-size: 0.85rem;
+      white-space: nowrap;
+      transition: color 0.15s;
+    }
+
+    .tab:hover { color: var(--text); }
+
+    .tab.active {
+      background: var(--surface);
+      border-color: var(--border);
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: -1px;
+    }
+
+    .tab-count {
+      background: var(--border);
+      border-radius: 10px;
+      font-size: 0.7rem;
+      padding: 1px 6px;
+      margin-left: 6px;
+      color: var(--muted);
+    }
+
+    .tab-panel {
+      display: none;
+      padding: 0 24px 24px;
+    }
+
+    .tab-panel.active { display: block; }
+
+    .table-wrap { overflow-x: auto; margin-top: 16px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 8px 12px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    thead th:hover { color: var(--text); }
+    thead th .sort-icon { margin-left: 4px; opacity: 0.4; }
+    thead th.sorted .sort-icon { opacity: 1; color: var(--accent); }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+
+    tbody tr:hover { background: var(--surface); }
+
+    tbody td { padding: 10px 12px; vertical-align: top; }
+
+    td.rank { color: var(--muted); width: 40px; text-align: right; }
+
+    td.repo a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    td.repo a:hover { text-decoration: underline; }
+
+    td.desc { color: var(--muted); max-width: 340px; }
+
+    td.stars { color: var(--yellow); text-align: right; font-weight: 600; white-space: nowrap; }
+
+    .topic-badge {
+      display: inline-block;
+      background: rgba(88,166,255,0.12);
+      color: var(--accent);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 0.75rem;
+      margin: 1px;
+    }
+
+    td.pushed { color: var(--muted); white-space: nowrap; }
+
+    .empty { padding: 40px 12px; color: var(--muted); text-align: center; }
+
+    footer {
+      padding: 16px 24px;
+      color: var(--muted);
+      font-size: 0.75rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border: 2px solid var(--muted);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>⚡ Kunoichi Radar <span>— AI Repos by Vertical</span></h1>
+    {% if last_fetched %}
+    <div class="last-fetched" id="last-fetched">Last updated: {{ last_fetched[:19] | replace("T", " ") }} UTC</div>
+    {% else %}
+    <div class="last-fetched" id="last-fetched">No data yet — hit Refresh to fetch.</div>
+    {% endif %}
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span id="fetch-status" style="color:var(--muted);font-size:0.8rem;"></span>
+    <button id="refresh-btn" onclick="triggerRefresh()">↻ Refresh Now</button>
+  </div>
+</header>
+
+<form id="filter-form" method="get" action="/">
+  <div class="filters">
+    <div class="filter-group">
+      <label for="stars-range">Min ★ Stars:</label>
+      <input type="range" id="stars-range" name="min_stars" min="0" max="5000" step="50"
+             value="{{ min_stars }}" oninput="document.getElementById('stars-value').textContent=this.value" />
+      <span id="stars-value">{{ min_stars }}</span>
+    </div>
+    <div class="filter-group">
+      <label for="pushed_after">Pushed after:</label>
+      <input type="date" id="pushed_after" name="pushed_after" value="{{ pushed_after }}" />
+    </div>
+    <div class="filter-group">
+      <label for="pushed_before">Pushed before:</label>
+      <input type="date" id="pushed_before" name="pushed_before" value="{{ pushed_before }}" />
+    </div>
+    <button type="submit" class="apply-btn">Apply Filters</button>
+    <a href="/" class="apply-btn" style="text-decoration:none;">Reset</a>
+  </div>
+</form>
+
+<div class="tabs">
+  {% for cat in categories %}
+  <div class="tab {% if loop.first %}active{% endif %}"
+       onclick="switchTab('{{ cat | replace(' ', '_') }}')">
+    {{ cat }}
+    <span class="tab-count">{{ repos_by_category[cat] | length }}</span>
+  </div>
+  {% endfor %}
+</div>
+
+{% for cat in categories %}
+<div class="tab-panel {% if loop.first %}active{% endif %}" id="panel-{{ cat | replace(' ', '_') }}">
+  {% set repos = repos_by_category[cat] %}
+  {% if repos %}
+  <div class="table-wrap">
+    <table id="table-{{ cat | replace(' ', '_') }}">
+      <thead>
+        <tr>
+          <th onclick="sortTable(this, '{{ cat | replace(' ', '_') }}', 0)" data-type="num">#<span class="sort-icon">↕</span></th>
+          <th onclick="sortTable(this, '{{ cat | replace(' ', '_') }}', 1)" data-type="str">Repository<span class="sort-icon">↕</span></th>
+          <th onclick="sortTable(this, '{{ cat | replace(' ', '_') }}', 2)" data-type="str">Description<span class="sort-icon">↕</span></th>
+          <th onclick="sortTable(this, '{{ cat | replace(' ', '_') }}', 3)" data-type="num" class="sorted">★ Stars<span class="sort-icon">↓</span></th>
+          <th>Topics</th>
+          <th onclick="sortTable(this, '{{ cat | replace(' ', '_') }}', 5)" data-type="str">Last Pushed<span class="sort-icon">↕</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for repo in repos %}
+        <tr>
+          <td class="rank">{{ loop.index }}</td>
+          <td class="repo"><a href="{{ repo.url }}" target="_blank" rel="noopener">{{ repo.name }}</a></td>
+          <td class="desc">{{ repo.description[:120] }}{% if repo.description | length > 120 %}…{% endif %}</td>
+          <td class="stars">{{ "{:,}".format(repo.stars) }}</td>
+          <td>
+            {% for topic in repo.topics[:5] %}
+            <span class="topic-badge">{{ topic }}</span>
+            {% endfor %}
+          </td>
+          <td class="pushed">{{ (repo.pushed_at or "")[:10] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">No repos found for this category with the current filters.</div>
+  {% endif %}
+</div>
+{% endfor %}
+
+<footer>
+  Kunoichi Radar — powered by GitHub Search API &nbsp;·&nbsp;
+  <a href="/api/repos" style="color:var(--accent);">JSON API</a>
+</footer>
+
+<script>
+  function switchTab(id) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    document.getElementById('panel-' + id).classList.add('active');
+  }
+
+  async function triggerRefresh() {
+    const btn = document.getElementById('refresh-btn');
+    const statusEl = document.getElementById('fetch-status');
+    btn.disabled = true;
+    statusEl.innerHTML = '<span class="spinner"></span> Fetching…';
+
+    const res = await fetch('/refresh', { method: 'POST' });
+    const data = await res.json();
+
+    if (data.status === 'started') {
+      pollStatus();
+    } else {
+      statusEl.textContent = data.status;
+      btn.disabled = false;
+    }
+  }
+
+  function pollStatus() {
+    const btn = document.getElementById('refresh-btn');
+    const statusEl = document.getElementById('fetch-status');
+
+    const interval = setInterval(async () => {
+      const res = await fetch('/status');
+      const data = await res.json();
+
+      if (!data.fetch_in_progress) {
+        clearInterval(interval);
+        statusEl.textContent = '✓ Done';
+        btn.disabled = false;
+        setTimeout(() => location.reload(), 800);
+      }
+    }, 2000);
+  }
+
+  function sortTable(th, tableId, colIndex) {
+    const table = document.getElementById('table-' + tableId);
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const isNum = th.dataset.type === 'num';
+    const currentAsc = th.dataset.asc === 'true';
+    const asc = !currentAsc;
+
+    document.querySelectorAll(`#table-${tableId} thead th`).forEach(h => {
+      h.classList.remove('sorted');
+      const icon = h.querySelector('.sort-icon');
+      if (icon) icon.textContent = '↕';
+    });
+    th.classList.add('sorted');
+    const icon = th.querySelector('.sort-icon');
+    if (icon) icon.textContent = asc ? '↑' : '↓';
+    th.dataset.asc = asc;
+
+    rows.sort((a, b) => {
+      let aVal = a.cells[colIndex].textContent.trim().replace(/,/g, '');
+      let bVal = b.cells[colIndex].textContent.trim().replace(/,/g, '');
+      if (isNum) {
+        aVal = parseFloat(aVal) || 0;
+        bVal = parseFloat(bVal) || 0;
+      }
+      if (aVal < bVal) return asc ? -1 : 1;
+      if (aVal > bVal) return asc ? 1 : -1;
+      return 0;
+    });
+
+    rows.forEach(r => tbody.appendChild(r));
+  }
+
+  // Check if fetch is already running on load
+  (async () => {
+    const res = await fetch('/status');
+    const data = await res.json();
+    if (data.fetch_in_progress) {
+      document.getElementById('refresh-btn').disabled = true;
+      document.getElementById('fetch-status').innerHTML = '<span class="spinner"></span> Fetching…';
+      pollStatus();
+    }
+  })();
+</script>
+</body>
+</html>
