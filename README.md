@@ -2,8 +2,6 @@
 
 Discover trending GitHub repositories at the intersection of AI and industry verticals — AI Engineering, Dental AI, and Healthcare AI.
 
-![Dashboard screenshot placeholder](docs/screenshot.png)
-
 ## Features
 
 - Fetches and ranks repos from GitHub Search API across configurable categories
@@ -20,7 +18,7 @@ Discover trending GitHub repositories at the intersection of AI and industry ver
 ### 1. Clone and create a virtual environment
 
 ```bash
-git clone https://github.com/your-org/kunoichi-radar.git
+git clone https://github.com/codekunoichi/kunoichi-radar.git
 cd kunoichi-radar
 python -m venv venv
 source venv/bin/activate   # Windows: venv\Scripts\activate
@@ -71,7 +69,16 @@ python main.py export --format json
 uvicorn src.web:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Open http://localhost:8000 — you'll see all categories in tabs with sortable tables, star filters, and a "Refresh Now" button.
+Open http://localhost:8000 — tabbed categories, sortable tables, min-star slider, date-range filter, and a "Refresh Now" button that triggers a live background fetch.
+
+### API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | HTML dashboard (`?min_stars=`, `?pushed_after=`, `?pushed_before=`) |
+| `/refresh` | POST | Trigger a background fetch; returns `{"status": "started"}` |
+| `/status` | GET | Returns `{"fetch_in_progress": true/false}` |
+| `/api/repos` | GET | JSON list of repos (`?category=`, `?min_stars=`) |
 
 ---
 
@@ -123,5 +130,6 @@ The workflow at `.github/workflows/refresh.yml` runs `python main.py fetch` dail
 ## Running Tests
 
 ```bash
+source venv/bin/activate
 pytest tests/ -v
 ```
