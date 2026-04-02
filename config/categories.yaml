@@ -1,10 +1,10 @@
 categories:
   - name: "AI Engineering"
     queries:
-      - "ai engineering stars:>10"
-      - "llm agents stars:>10"
-      - "agentic AI stars:>10"
-      - "AI infrastructure stars:>10"
+      - "ai engineering stars:>100"
+      - "llm agents stars:>100"
+      - "agentic AI stars:>100"
+      - "AI infrastructure stars:>100"
     topics:
       - ai-engineering
       - llmops
@@ -21,8 +21,8 @@ categories:
 
   - name: "Healthcare AI"
     queries:
-      - "healthcare AI stars:>10"
-      - "clinical NLP stars:>10"
-      - "medical LLM stars:>10"
-      - "FHIR AI stars:>10"
+      - "healthcare AI stars:>100"
+      - "clinical NLP stars:>100"
+      - "medical LLM stars:>100"
+      - "FHIR AI stars:>100"
     topics: []
