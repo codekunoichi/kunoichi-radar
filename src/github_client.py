@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 GITHUB_SEARCH_URL = "https://api.github.com/search/repositories"
 MAX_RETRIES = 5
 BASE_BACKOFF = 2
+GITHUB_SEARCH_MAX_RESULTS = 1000  # GitHub hard cap: per_page * page must be <= 1000
 
 
 def build_search_url(query: str, page: int = 1) -> str:
@@ -90,6 +91,9 @@ class GitHubClient:
             results.extend(self._normalize(item, category) for item in items)
 
             if len(results) >= data.get("total_count", 0) or len(items) < 100:
+                break
+
+            if len(results) >= GITHUB_SEARCH_MAX_RESULTS:
                 break
 
             page += 1
